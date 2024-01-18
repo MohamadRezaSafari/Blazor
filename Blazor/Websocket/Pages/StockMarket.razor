@@ -1,0 +1,39 @@
+﻿@page "/stock"
+
+<PageTitle>Stock Market</PageTitle>
+
+@foreach (var item in result.Data)
+{
+    <p class="@bgColor">
+        @item.Symbol --- @item.LastPrice
+    </p>
+}
+
+@code {
+
+    string bgColor = "alert alert-light";
+    ResponseDto result = new ResponseDto();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var stock = new Stock();
+        await stock.ConnectAsync();
+
+        await foreach (var socket in stock.SendAsync())
+        {
+            var response = await stock.DeserializeResponse(socket);
+
+            if (result is not null && response is not null)
+            {
+                if (result.Data?.FirstOrDefault()?.LastPrice > response.Data?.FirstOrDefault()?.LastPrice)
+                    bgColor = "alert alert-danger";
+                else if (result.Data?.FirstOrDefault()?.LastPrice < response.Data?.FirstOrDefault()?.LastPrice)
+                    bgColor = "alert alert-success";
+            }
+
+            result = response;
+
+            this.StateHasChanged();
+        }
+    }
+}
