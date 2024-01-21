@@ -1,0 +1,23 @@
+﻿
+<h1>@Test</h1>
+
+
+@foreach (var item in Result.Data)
+{
+    <p class="@bgColor">
+        @item.Symbol --- @item.LastPrice
+    </p>
+}
+
+
+@code {
+
+    [Parameter]
+    public string bgColor { get; set; } = "alert alert-light";
+
+    [Parameter]
+    public ResponseDto Result { get; set; } = new ResponseDto();
+
+    [CascadingParameter]
+    public string Test { get; set; } = "";
+}

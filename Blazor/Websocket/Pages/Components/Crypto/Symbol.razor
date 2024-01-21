@@ -1,0 +1,53 @@
+﻿
+
+<Show bgColor="@bgColor"
+      Result="@result">
+</Show>
+
+
+@code {
+
+    [Parameter]
+    public string SymbolName { get; set; } = "";
+
+    [Parameter]
+    public EventCallback<decimal> FinalPrice { get; set; }
+
+    private string bgColor { get; set; } = "alert alert-light";
+    private ResponseDto result;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var stock = new Stock();
+        await stock.ConnectAsync();
+
+        var symbolObj = new
+        {
+            type = "subscribe",
+            symbol = $"BINANCE:{SymbolName}"
+        };
+
+        await foreach (var socket in stock.SendAsync(symbolObj))
+        {
+            var response = await stock.DeserializeResponse(socket);
+
+            if (result is not null && response is not null)
+            {
+                if (result.Data?.FirstOrDefault()?.LastPrice > response.Data?.FirstOrDefault()?.LastPrice)
+                    bgColor = "alert alert-danger";
+                else if (result.Data?.FirstOrDefault()?.LastPrice < response.Data?.FirstOrDefault()?.LastPrice)
+                    bgColor = "alert alert-success";
+            }
+
+            result = response;
+            await FinalPrice.InvokeAsync(result.Data.MaxBy(i => i.LastPrice).LastPrice);
+
+            this.StateHasChanged();
+        }
+    }
+
+    public void NotifyChange()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+}

@@ -17,13 +17,8 @@ public class Stock
         await webSocket.ConnectAsync(uri, CancellationToken.None);
     }
 
-    public async IAsyncEnumerable<string> SendAsync()
+    public async IAsyncEnumerable<string> SendAsync(object obj)
     {
-        var obj = new
-        {
-            type = "subscribe",
-            symbol = "BINANCE:BTCUSDT"
-        };
         string sendMessage = JsonSerializer.Serialize(obj);
         ArraySegment<byte> sendBuffer = new ArraySegment<byte>(Encoding.UTF8.GetBytes(sendMessage));
         await webSocket.SendAsync(sendBuffer, WebSocketMessageType.Text, true, CancellationToken.None);
